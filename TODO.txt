@@ -1,0 +1,1 @@
+see if rebar can integrate with google-snappy's autotools build system
