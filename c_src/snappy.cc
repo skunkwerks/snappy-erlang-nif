@@ -44,10 +44,12 @@ public:
     }
 
     char* GetAppendBuffer(size_t len, char* scratch) {
-        size_t sz = len > ALLOC_SIZE ? len + ALLOC_SIZE - (len % ALLOC_SIZE) : ALLOC_SIZE;
+        if ((length + len) > bin.size) {
+            size_t sz = len > ALLOC_SIZE ? len + ALLOC_SIZE - (len % ALLOC_SIZE) : ALLOC_SIZE;
 
-        if (!enif_realloc_binary(&bin, bin.size + sz)) {
-            throw OutOfMem();
+            if (!enif_realloc_binary(&bin, bin.size + sz)) {
+                throw OutOfMem();
+            }
         }
 
         return reinterpret_cast<char *>(bin.data + length);
