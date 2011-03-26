@@ -51,7 +51,7 @@ public:
         if ((length + len) > bin.size) {
             size_t sz = len > ALLOC_SIZE ? len + ALLOC_SIZE - (len % ALLOC_SIZE) : ALLOC_SIZE;
 
-            if (!enif_realloc_binary(env, &bin, bin.size + sz)) {
+            if (!enif_realloc_binary_compat(env, &bin, bin.size + sz)) {
                 throw OutOfMem();
             }
         }
@@ -61,7 +61,7 @@ public:
 
     ErlNifBinary& getBin() {
         if (bin.size > length) {
-            if (!enif_realloc_binary(env, &bin, length)) {
+            if (!enif_realloc_binary_compat(env, &bin, length)) {
                 // shouldn't happen
                 throw OutOfMem();
             }
