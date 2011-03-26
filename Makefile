@@ -1,17 +1,14 @@
-all: google-snappy snappy
+all: snappy eunit
 
 snappy:
-	mkdir -p ebin
 	./rebar compile
 
-google-snappy:
-	./support/build-google-snappy.sh
-
-test: snappy
+eunit:
 	./rebar eunit
+
+check: eunit
 
 clean:
 	./rebar clean
-	./support/clean-google-snappy.sh
 	rm -fr priv ebin
 
