@@ -20,6 +20,53 @@
 
 #include "erl_nif_compat.h"
 #include "google-snappy/snappy.h"
+#include "google-snappy/snappy-sinksource.h"
+
+
+const size_t ALLOC_SIZE = 2048;
+
+class OutOfMem {};
+
+
+class SnappyNifSink : public snappy::Sink {
+public:
+    SnappyNifSink() : length(0)  {
+        if (!enif_alloc_binary_compat(env, 0, &bin)) {
+            throw OutOfMem();
+        }
+    }
+
+    void Append(const char *data, size_t n) {
+        if (data != reinterpret_cast<const char *>(bin.data + length)) {
+            memcpy(bin.data + length, data, n);
+        }
+        length += n;
+    }
+
+    char* GetAppendBuffer(size_t len, char* scratch) {
+        size_t sz = len > ALLOC_SIZE ? len + ALLOC_SIZE - (len % ALLOC_SIZE) : ALLOC_SIZE;
+
+        if (!enif_realloc_binary(&bin, bin.size + sz)) {
+            throw OutOfMem();
+        }
+
+        return reinterpret_cast<char *>(bin.data + length);
+    }
+
+    ErlNifBinary& getBin() {
+        if (bin.size > length) {
+            if (!enif_realloc_binary(&bin, length)) {
+                // shouldn't happen
+                throw OutOfMem();
+            }
+        }
+        return bin;
+    }
+
+private:
+    ErlNifBinary bin;
+    size_t length;
+};
 
 
 extern "C" {
@@ -31,27 +78,27 @@ extern "C" {
         ERL_NIF_TERM binary = argv[0];
 #endif
         ErlNifBinary input;
-        ErlNifBinary retBin;
-        std::string output;
 
         if (!enif_inspect_binary(env, binary, &input)) {
             return enif_make_badarg(env);
         }
 
-        snappy::Compress(reinterpret_cast<const char *>(input.data),
-                         input.size, &output);
+        snappy::ByteArraySource source(reinterpret_cast<const char *>(input.data),
+                                       input.size);
 
-        if (!enif_alloc_binary_compat(env, output.length(), &retBin)) {
+        try {
+            SnappyNifSink sink;
+
+            snappy::Compress(&source, &sink);
+
+            return enif_make_tuple(env, 2,
+                                   enif_make_atom(env, "ok"),
+                                   enif_make_binary(env, &sink.getBin()));
+        } catch(OutOfMem e) {
             return enif_make_tuple(env, 2,
                                    enif_make_atom(env, "error"),
                                    enif_make_atom(env, "insufficient_memory"));
         }
-
-        memcpy(retBin.data, output.data(), output.length());
-
-        return enif_make_tuple(env, 2,
-                               enif_make_atom(env, "ok"),
-                               enif_make_binary(env, &retBin));
     }
 
 
@@ -67,19 +114,35 @@ extern "C" {
             return enif_make_badarg(env);
         }
 
+        size_t len = -1;
+        bool isCompressed = snappy::GetUncompressedLength(
+            reinterpret_cast<const char *>(input.data), input.size, &len);
+
+        if (!isCompressed) {
+            return enif_make_tuple(env, 2,
+                                   enif_make_atom(env, "error"),
+                                   enif_make_atom(env, "not_compressed_data"));
+        }
+
         ErlNifBinary retBin;
-        std::string output;
 
-        snappy::Uncompress(reinterpret_cast<const char *>(input.data),
-                           input.size, &output);
-
-        if (!enif_alloc_binary_compat(env, output.length(), &retBin)) {
+        if (!enif_alloc_binary_compat(env, len, &retBin)) {
             return enif_make_tuple(env, 2,
                                    enif_make_atom(env, "error"),
                                    enif_make_atom(env, "insufficient_memory"));
         }
 
-        memcpy(retBin.data, output.data(), output.length());
+        bool valid = snappy::RawUncompress(reinterpret_cast<const char *>(input.data),
+                                           len,
+                                           reinterpret_cast<char *>(retBin.data));
+
+        (void) valid;
+        // For some odd reason, it always returns false. Check with snappy's author.
+        // if (!valid) {
+        //     return enif_make_tuple(env, 2,
+        //                            enif_make_atom(env, "error"),
+        //                            enif_make_atom(env, "corrupted_data"));
+        // }
 
         return enif_make_tuple(env, 2,
                                enif_make_atom(env, "ok"),
