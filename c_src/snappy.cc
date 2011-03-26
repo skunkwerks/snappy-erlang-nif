@@ -130,7 +130,7 @@ extern "C" {
         }
 
         bool valid = snappy::RawUncompress(reinterpret_cast<const char *>(input.data),
-                                           len,
+                                           input.size,
                                            reinterpret_cast<char *>(retBin.data));
 
         (void) valid;

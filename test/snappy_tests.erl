@@ -49,4 +49,14 @@ decompression() ->
     {ok, Compressed} = Result,
 
     ?assertEqual({ok, Data}, snappy:decompress(Compressed)),
+
+    BigData = <<"mVPZzfDzKNeZrh1QdkMEgh2U0Bv2i3+bLJaCqgNibXuMuwfjrqTuxPGupxjI",
+                "xEbuYR+u/KZvSDhoxnkpPbgJo7oiQv2ibDrrGZx7RDs3Nn7Ww51B7+zUL4tr",
+                "G+16TlJilJT47Z4cQn8EpWex2bMRFAoJ6AMJAodLGbiD78yUyIorRKVcCa+k",
+                "udzjsqYAoXzW/z8JCB6rbGGSbnLyqztR//ch5sRwSvYARlV+IamzBkDXFZxj",
+                "5TAwAl2ZcbCeMX0qgXX4EonVZxc=">>,
+    Result2 = snappy:compress(BigData),
+    ?assertMatch({ok, _}, Result2),
+    {ok, Compressed2} = Result2,
+    ?assertEqual({ok, BigData}, snappy:decompress(Compressed2)),
     ok.
