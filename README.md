@@ -17,8 +17,9 @@ https://github.com/fdmanana/snappy-erlang-nif
 # performance tests
 
 Snappy is much faster than zlib's deflate compression, specially for reasonably large amounts of
-data. Here are a few basic tests.
+data. Here follow a few basic tests.
 
+<pre>
 Erlang R14B02 (erts-5.8.3) [source] [smp:2:2] [rq:2] [async-threads:0] [hipe] [kernel-poll:false]
 
 Eshell V5.8.3  (abort with ^G)
@@ -124,3 +125,4 @@ ok
 29> byte_size(zlib:zip(Large)).
 103440
 30>
+</pre>
