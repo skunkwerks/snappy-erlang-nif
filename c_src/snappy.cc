@@ -133,13 +133,11 @@ extern "C" {
                                            input.size,
                                            reinterpret_cast<char *>(retBin.data));
 
-        (void) valid;
-        // For some odd reason, it always returns false. Check with snappy's author.
-        // if (!valid) {
-        //     return enif_make_tuple(env, 2,
-        //                            enif_make_atom(env, "error"),
-        //                            enif_make_atom(env, "corrupted_data"));
-        // }
+        if (!valid) {
+            return enif_make_tuple(env, 2,
+                                   enif_make_atom(env, "error"),
+                                   enif_make_atom(env, "corrupted_data"));
+        }
 
         return enif_make_tuple(env, 2,
                                enif_make_atom(env, "ok"),
