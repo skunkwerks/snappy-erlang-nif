@@ -25,18 +25,25 @@ uncompress_test_() ->
 
 
 run_compress_test() ->
-    Data = <<"words that go unspoken, deeds that go undone">>,
+    Data = iolist_to_binary(
+        lists:duplicate(11, <<"words that go unspoken, deeds that go undone">>)),
     Result = snappy:compress(Data),
     ?assertMatch({ok, _}, Result),
     {ok, Compressed} = Result,
 
+    ?assertEqual(true, byte_size(Compressed) < byte_size(Data)),
+
     ?assertEqual(true, snappy:is_valid_compressed_buffer(Compressed)),
+    ?assertEqual(false, snappy:is_valid_compressed_buffer(Data)),
+    ?assertEqual(false, snappy:is_valid_compressed_buffer(<<"foobar123">>)),
+
     ?assertEqual({ok, byte_size(Data)}, snappy:get_uncompressed_length(Compressed)),
     ok.
 
 
 run_uncompress_test() ->
-    Data = <<"words that go unspoken, deeds that go undone">>,
+    Data = iolist_to_binary(
+        lists:duplicate(11, <<"words that go unspoken, deeds that go undone">>)),
     Result = snappy:compress(Data),
     ?assertMatch({ok, _}, Result),
     {ok, Compressed} = Result,
