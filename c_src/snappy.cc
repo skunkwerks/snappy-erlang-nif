@@ -22,6 +22,10 @@
 #include "google-snappy/snappy.h"
 #include "google-snappy/snappy-sinksource.h"
 
+#ifdef OTP_R13B03
+#error OTP R13B03 not supported. Upgrade to R13B04 or later.
+#endif
+
 
 const size_t ALLOC_SIZE = 2048;
 
@@ -30,7 +34,7 @@ class OutOfMem {};
 
 class SnappyNifSink : public snappy::Sink {
 public:
-    SnappyNifSink() : length(0)  {
+    SnappyNifSink(ErlNifEnv* e) : env(e), length(0)  {
         if (!enif_alloc_binary_compat(env, 0, &bin)) {
             throw OutOfMem();
         }
@@ -47,7 +51,7 @@ public:
         if ((length + len) > bin.size) {
             size_t sz = len > ALLOC_SIZE ? len + ALLOC_SIZE - (len % ALLOC_SIZE) : ALLOC_SIZE;
 
-            if (!enif_realloc_binary(&bin, bin.size + sz)) {
+            if (!enif_realloc_binary(env, &bin, bin.size + sz)) {
                 throw OutOfMem();
             }
         }
@@ -57,7 +61,7 @@ public:
 
     ErlNifBinary& getBin() {
         if (bin.size > length) {
-            if (!enif_realloc_binary(&bin, length)) {
+            if (!enif_realloc_binary(env, &bin, length)) {
                 // shouldn't happen
                 throw OutOfMem();
             }
@@ -66,6 +70,7 @@ public:
     }
 
 private:
+    ErlNifEnv* env;
     ErlNifBinary bin;
     size_t length;
 };
@@ -73,15 +78,10 @@ private:
 
 extern "C" {
 
-#ifdef OTP_R13B03
-    ERL_NIF_TERM snappy_compress(ErlNifEnv* env, ERL_NIF_TERM binary) {
-#else
     ERL_NIF_TERM snappy_compress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-        ERL_NIF_TERM binary = argv[0];
-#endif
         ErlNifBinary input;
 
-        if (!enif_inspect_binary(env, binary, &input)) {
+        if (!enif_inspect_binary(env, argv[0], &input)) {
             return enif_make_badarg(env);
         }
 
@@ -89,7 +89,7 @@ extern "C" {
                                        input.size);
 
         try {
-            SnappyNifSink sink;
+            SnappyNifSink sink(env);
 
             snappy::Compress(&source, &sink);
 
@@ -104,15 +104,10 @@ extern "C" {
     }
 
 
-#ifdef OTP_R13B03
-    ERL_NIF_TERM snappy_decompress(ErlNifEnv* env, ERL_NIF_TERM binary) {
-#else
     ERL_NIF_TERM snappy_decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-        ERL_NIF_TERM binary = argv[0];
-#endif
         ErlNifBinary input;
 
-        if (!enif_inspect_binary(env, binary, &input)) {
+        if (!enif_inspect_binary(env, argv[0], &input)) {
             return enif_make_badarg(env);
         }
 
@@ -152,15 +147,10 @@ extern "C" {
     }
 
 
-#ifdef OTP_R13B03
-    ERL_NIF_TERM snappy_get_uncompressed_length(ErlNifEnv* env, ERL_NIF_TERM binary) {
-#else
     ERL_NIF_TERM snappy_get_uncompressed_length(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-        ERL_NIF_TERM binary = argv[0];
-#endif
         ErlNifBinary input;
 
-        if (!enif_inspect_binary(env, binary, &input)) {
+        if (!enif_inspect_binary(env, argv[0], &input)) {
             return enif_make_badarg(env);
         }
 
@@ -180,15 +170,10 @@ extern "C" {
     }
 
 
-#ifdef OTP_R13B03
-    ERL_NIF_TERM snappy_is_valid_compressed_buffer(ErlNifEnv* env, ERL_NIF_TERM binary) {
-#else
     ERL_NIF_TERM snappy_is_valid_compressed_buffer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
-        ERL_NIF_TERM binary = argv[0];
-#endif
         ErlNifBinary input;
 
-        if (!enif_inspect_binary(env, binary, &input)) {
+        if (!enif_inspect_binary(env, argv[0], &input)) {
             return enif_make_badarg(env);
         }
 
