@@ -17,14 +17,14 @@
 -include_lib("eunit/include/eunit.hrl").
 
 
-compress_test_() ->
-    {timeout, 60, [fun run_compress_test/0]}.
+compression_test_() ->
+    {timeout, 60, [fun compression/0]}.
 
-uncompress_test_() ->
-    {timeout, 60, [fun run_uncompress_test/0]}.
+decompression_test_() ->
+    {timeout, 60, [fun decompression/0]}.
 
 
-run_compress_test() ->
+compression() ->
     Data = iolist_to_binary(
         lists:duplicate(11, <<"words that go unspoken, deeds that go undone">>)),
     Result = snappy:compress(Data),
@@ -41,7 +41,7 @@ run_compress_test() ->
     ok.
 
 
-run_uncompress_test() ->
+decompression() ->
     Data = iolist_to_binary(
         lists:duplicate(11, <<"words that go unspoken, deeds that go undone">>)),
     Result = snappy:compress(Data),
