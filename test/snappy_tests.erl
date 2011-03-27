@@ -25,8 +25,8 @@ decompression_test_() ->
 
 
 compression() ->
-    Data = iolist_to_binary(
-        lists:duplicate(11, <<"words that go unspoken, deeds that go undone">>)),
+    DataIoList = lists:duplicate(11, <<"words that go unspoken, deeds that go undone">>),
+    Data = iolist_to_binary(DataIoList),
     Result = snappy:compress(Data),
     ?assertMatch({ok, _}, Result),
     {ok, Compressed} = Result,
@@ -36,27 +36,39 @@ compression() ->
     ?assertEqual(true, snappy:is_valid_compressed_buffer(Compressed)),
     ?assertEqual(false, snappy:is_valid_compressed_buffer(Data)),
     ?assertEqual(false, snappy:is_valid_compressed_buffer(<<"foobar123">>)),
-
     ?assertEqual({ok, byte_size(Data)}, snappy:get_uncompressed_length(Compressed)),
+
+    Result2 = snappy:compress(DataIoList),
+    ?assertMatch({ok, _}, Result2),
+    {ok, Compressed2} = Result2,
+
+    ?assertEqual(byte_size(Compressed2), byte_size(Compressed)),
+    ?assertEqual(true, snappy:is_valid_compressed_buffer(Compressed2)),
+    ?assertEqual({ok, byte_size(Data)}, snappy:get_uncompressed_length(Compressed2)),
     ok.
 
 
 decompression() ->
-    Data = iolist_to_binary(
-        lists:duplicate(11, <<"words that go unspoken, deeds that go undone">>)),
+    DataIoList = lists:duplicate(11, <<"words that go unspoken, deeds that go undone">>),
+    Data = iolist_to_binary(DataIoList),
     Result = snappy:compress(Data),
     ?assertMatch({ok, _}, Result),
     {ok, Compressed} = Result,
-
     ?assertEqual({ok, Data}, snappy:decompress(Compressed)),
+
+    Result2 = snappy:compress(DataIoList),
+    ?assertMatch({ok, _}, Result2),
+    {ok, Compressed2} = Result2,
+    ?assertEqual({ok, Data}, snappy:decompress(Compressed2)),
 
     BigData = <<"mVPZzfDzKNeZrh1QdkMEgh2U0Bv2i3+bLJaCqgNibXuMuwfjrqTuxPGupxjI",
                 "xEbuYR+u/KZvSDhoxnkpPbgJo7oiQv2ibDrrGZx7RDs3Nn7Ww51B7+zUL4tr",
                 "G+16TlJilJT47Z4cQn8EpWex2bMRFAoJ6AMJAodLGbiD78yUyIorRKVcCa+k",
                 "udzjsqYAoXzW/z8JCB6rbGGSbnLyqztR//ch5sRwSvYARlV+IamzBkDXFZxj",
                 "5TAwAl2ZcbCeMX0qgXX4EonVZxc=">>,
-    Result2 = snappy:compress(BigData),
-    ?assertMatch({ok, _}, Result2),
-    {ok, Compressed2} = Result2,
-    ?assertEqual({ok, BigData}, snappy:decompress(Compressed2)),
+    Result3 = snappy:compress(BigData),
+    ?assertMatch({ok, _}, Result3),
+    {ok, Compressed3} = Result3,
+    ?assertEqual({ok, BigData}, snappy:decompress(Compressed3)),
     ok.
+

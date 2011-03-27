@@ -37,17 +37,17 @@ init() ->
     erlang:load_nif(SoName, 0).
 
 
-compress(_Bin) ->
+compress(_IoList) ->
     exit({snappy_nif_not_loaded, module, ?MODULE, line, ?LINE}).
 
 
-decompress(_Bin) ->
+decompress(_IoList) ->
     exit({snappy_nif_not_loaded, module, ?MODULE, line, ?LINE}).
 
 
-get_uncompressed_length(_Bin) ->
+get_uncompressed_length(_IoList) ->
     exit({snappy_nif_not_loaded, module, ?MODULE, line, ?LINE}).
 
 
-is_valid_compressed_buffer(_Bin) ->
+is_valid_compressed_buffer(_IoList) ->
     exit({snappy_nif_not_loaded, module, ?MODULE, line, ?LINE}).

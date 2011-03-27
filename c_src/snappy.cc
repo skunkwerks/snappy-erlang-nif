@@ -84,7 +84,7 @@ extern "C" {
     ERL_NIF_TERM snappy_compress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
         ErlNifBinary input;
 
-        if (!enif_inspect_binary(env, argv[0], &input)) {
+        if (!enif_inspect_iolist_as_binary(env, argv[0], &input)) {
             return enif_make_badarg(env);
         }
 
@@ -110,7 +110,7 @@ extern "C" {
     ERL_NIF_TERM snappy_decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
         ErlNifBinary input;
 
-        if (!enif_inspect_binary(env, argv[0], &input)) {
+        if (!enif_inspect_iolist_as_binary(env, argv[0], &input)) {
             return enif_make_badarg(env);
         }
 
@@ -151,7 +151,7 @@ extern "C" {
     ERL_NIF_TERM snappy_get_uncompressed_length(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
         ErlNifBinary input;
 
-        if (!enif_inspect_binary(env, argv[0], &input)) {
+        if (!enif_inspect_iolist_as_binary(env, argv[0], &input)) {
             return enif_make_badarg(env);
         }
 
@@ -174,7 +174,7 @@ extern "C" {
     ERL_NIF_TERM snappy_is_valid_compressed_buffer(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[]) {
         ErlNifBinary input;
 
-        if (!enif_inspect_binary(env, argv[0], &input)) {
+        if (!enif_inspect_iolist_as_binary(env, argv[0], &input)) {
             return enif_make_badarg(env);
         }
 
