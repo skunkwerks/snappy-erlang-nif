@@ -36,6 +36,7 @@ class SnappyNifSink : public snappy::Sink {
 public:
     SnappyNifSink(ErlNifEnv* e) : env(e), length(0)  {
         if (!enif_alloc_binary_compat(env, 0, &bin)) {
+            enif_release_binary_compat(env, &bin);
             throw OutOfMem();
         }
     }
@@ -52,6 +53,7 @@ public:
             size_t sz = len > ALLOC_SIZE ? len + ALLOC_SIZE - (len % ALLOC_SIZE) : ALLOC_SIZE;
 
             if (!enif_realloc_binary_compat(env, &bin, bin.size + sz)) {
+                enif_release_binary_compat(env, &bin);
                 throw OutOfMem();
             }
         }
@@ -63,6 +65,7 @@ public:
         if (bin.size > length) {
             if (!enif_realloc_binary_compat(env, &bin, length)) {
                 // shouldn't happen
+                enif_release_binary_compat(env, &bin);
                 throw OutOfMem();
             }
         }
