@@ -30,7 +30,11 @@ extern "C" {
 #elif ERL_NIF_MAJOR_VERSION == 1 && ERL_NIF_MINOR_VERSION == 0
 #define OTP_R13B04
 #elif ERL_NIF_MAJOR_VERSION == 2 && ERL_NIF_MINOR_VERSION == 0
-#define OTP_R14
+#define OTP_R14A
+#define OTP_R14B
+#define OTP_R14B01
+#elif ERL_NIF_MAJOR_VERSION == 2 && ERL_NIF_MINOR_VERSION == 1
+#define OTP_R14B02
 #endif
 
 
@@ -71,7 +75,7 @@ extern "C" {
 #endif /* R13B04 */
 
 
-/* OTP R14 and future releases */
+/* OTP R14A and future releases */
 #if !defined(OTP_R13B03) && !defined(OTP_R13B04)
 
 #define enif_open_resource_type_compat(E, N, D, F, T) \
