@@ -27,8 +27,6 @@
 #endif
 
 
-const size_t ALLOC_SIZE = 2048;
-
 class OutOfMem {};
 
 
@@ -50,7 +48,7 @@ public:
 
     char* GetAppendBuffer(size_t len, char* scratch) {
         if ((length + len) > bin.size) {
-            size_t sz = len > ALLOC_SIZE ? len + ALLOC_SIZE - (len % ALLOC_SIZE) : ALLOC_SIZE;
+            size_t sz = (len * 4) < 8192 ? 8192 : (len * 4);
 
             if (!enif_realloc_binary_compat(env, &bin, bin.size + sz)) {
                 enif_release_binary_compat(env, &bin);
