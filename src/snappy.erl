@@ -38,16 +38,16 @@ init() ->
 
 
 compress(_IoList) ->
-    exit({snappy_nif_not_loaded, module, ?MODULE, line, ?LINE}).
+    exit(snappy_nif_not_loaded).
 
 
 decompress(_IoList) ->
-    exit({snappy_nif_not_loaded, module, ?MODULE, line, ?LINE}).
+    exit(snappy_nif_not_loaded).
 
 
 get_uncompressed_length(_IoList) ->
-    exit({snappy_nif_not_loaded, module, ?MODULE, line, ?LINE}).
+    exit(snappy_nif_not_loaded).
 
 
 is_valid_compressed_buffer(_IoList) ->
-    exit({snappy_nif_not_loaded, module, ?MODULE, line, ?LINE}).
+    exit(snappy_nif_not_loaded).
