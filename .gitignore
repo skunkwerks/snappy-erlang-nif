@@ -7,6 +7,8 @@
 /c_src/google-snappy/config.h
 /c_src/google-snappy/config.log
 /c_src/google-snappy/config.status
+/c_src/google-snappy/config.sub
+/c_src/google-snappy/config.guess
 /c_src/google-snappy/*.la
 /c_src/google-snappy/*.lo
 /c_src/google-snappy/*.o
@@ -15,4 +17,10 @@
 /c_src/google-snappy/libtool
 /c_src/google-snappy/snappy-stubs-public.h
 /c_src/google-snappy/snappy_unittest
+/c_src/google-snappy/configure
+/c_src/google-snappy/missing
+/c_src/google-snappy/depcomp
+/c_src/google-snappy/ltmain.sh
+/c_src/google-snappy/install-sh
+/c_src/google-snappy/autom4te.cache/
 *~
