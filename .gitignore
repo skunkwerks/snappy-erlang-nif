@@ -1,5 +1,16 @@
+config.h
+config.log
+config.status
+stamp-h1
+libtool
+Makefile
 /ebin
 /priv
 /.eunit/
-/c_src/*.o
+*.o
+*.lo
+*.la
 *~
+c_src/google-snappy/.deps/
+c_src/google-snappy/.libs/
+c_src/google-snappy/snappy_unittest
