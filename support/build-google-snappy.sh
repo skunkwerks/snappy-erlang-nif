@@ -2,6 +2,7 @@
 
 PARENT=`pwd`
 cd c_src/google-snappy && \
-    ./configure && \
-    make
+    [ ! -f libsnappy.la ] && \
+        ./configure && \
+        make
 cd "$pwd"
