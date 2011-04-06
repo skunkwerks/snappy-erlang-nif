@@ -1,20 +1,5 @@
 /ebin
 /priv
 /.eunit/
-/c_src/google-snappy/.deps/
-/c_src/google-snappy/.libs/
-/c_src/google-snappy/autom4te.cache/
-/c_src/google-snappy/Makefile
-/c_src/google-snappy/config.h
-/c_src/google-snappy/config.log
-/c_src/google-snappy/config.status
-/c_src/google-snappy/*.la
-/c_src/google-snappy/*.o
-/c_src/google-snappy/*.lo
-/c_src/google-snappy/libtool
-/c_src/google-snappy/snappy_unittest
-/c_src/google-snappy/stamp-h1
-# snappy-stubs-public.h is deleted after every `make clean`
-/c_src/google-snappy/snappy-stubs-public.h
 /c_src/*.o
 *~
