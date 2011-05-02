@@ -13,4 +13,3 @@ Makefile
 *~
 c_src/google-snappy/.deps/
 c_src/google-snappy/.libs/
-c_src/google-snappy/snappy_unittest
