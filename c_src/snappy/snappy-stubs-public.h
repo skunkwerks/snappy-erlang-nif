@@ -36,13 +36,8 @@
 #ifndef UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_PUBLIC_H_
 #define UTIL_SNAPPY_OPENSOURCE_SNAPPY_STUBS_PUBLIC_H_
 
-#if 1
 #include <stdint.h>
-#endif
-
-#if 1
 #include <stddef.h>
-#endif
 
 #define SNAPPY_MAJOR 1
 #define SNAPPY_MINOR 0
