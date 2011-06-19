@@ -33,18 +33,18 @@ compression() ->
 
     ?assertEqual(true, byte_size(Compressed) < byte_size(Data)),
 
-    ?assertEqual(true, snappy:is_valid_compressed_buffer(Compressed)),
-    ?assertEqual(false, snappy:is_valid_compressed_buffer(Data)),
-    ?assertEqual(false, snappy:is_valid_compressed_buffer(<<"foobar123">>)),
-    ?assertEqual({ok, byte_size(Data)}, snappy:get_uncompressed_length(Compressed)),
+    ?assertEqual(true, snappy:is_valid(Compressed)),
+    ?assertEqual(false, snappy:is_valid(Data)),
+    ?assertEqual(false, snappy:is_valid(<<"foobar123">>)),
+    ?assertEqual({ok, byte_size(Data)}, snappy:uncompressed_length(Compressed)),
 
     Result2 = snappy:compress(DataIoList),
     ?assertMatch({ok, _}, Result2),
     {ok, Compressed2} = Result2,
 
     ?assertEqual(byte_size(Compressed2), byte_size(Compressed)),
-    ?assertEqual(true, snappy:is_valid_compressed_buffer(Compressed2)),
-    ?assertEqual({ok, byte_size(Data)}, snappy:get_uncompressed_length(Compressed2)),
+    ?assertEqual(true, snappy:is_valid(Compressed2)),
+    ?assertEqual({ok, byte_size(Data)}, snappy:uncompressed_length(Compressed2)),
     ok.
 
 
