@@ -34,7 +34,7 @@ typedef struct {
     ErlNifBinary data;
     ErlNifPid pid;
     ERL_NIF_TERM ref;
-} task;
+} task_t;
 
 static ERL_NIF_TERM ATOM_OK;
 static ERL_NIF_TERM ATOM_ERROR;
@@ -50,10 +50,10 @@ static TaskQueue *compQueue = NULL;
 static TaskQueue *decompQueue = NULL;
 
 
-static void* compressor(void *);
-static void* decompressor(void *);
-static ERL_NIF_TERM compress(task *);
-static ERL_NIF_TERM decompress(task *);
+static void* compressor(void*);
+static void* decompressor(void*);
+static ERL_NIF_TERM compress(task_t*);
+static ERL_NIF_TERM decompress(task_t*);
 static inline ERL_NIF_TERM make_ok(ErlNifEnv*, ERL_NIF_TERM);
 static inline ERL_NIF_TERM make_ok(ErlNifEnv*, ERL_NIF_TERM, ERL_NIF_TERM);
 static inline ERL_NIF_TERM make_error(ErlNifEnv*, const char*);
@@ -64,8 +64,8 @@ static ERL_NIF_TERM snappy_uncompressed_length(ErlNifEnv*, int, const ERL_NIF_TE
 static ERL_NIF_TERM snappy_is_valid(ErlNifEnv*, int, const ERL_NIF_TERM[]);
 static int on_load(ErlNifEnv*, void**, ERL_NIF_TERM);
 static void on_unload(ErlNifEnv*, void*);
-static inline task* allocTask(ErlNifEnv*, ERL_NIF_TERM, ERL_NIF_TERM, ERL_NIF_TERM);
-static inline void freeTask(task**);
+static inline task_t* allocTask(ErlNifEnv*, ERL_NIF_TERM, ERL_NIF_TERM, ERL_NIF_TERM);
+static inline void freeTask(task_t**);
 
 
 class bad_arg { };
@@ -76,14 +76,14 @@ class TaskQueue
 public:
     TaskQueue(const unsigned int sz);
     ~TaskQueue();
-    void queue(task *);
-    task* dequeue();
+    void queue(task_t*);
+    task_t* dequeue();
 
 private:
     ErlNifCond *notFull;
     ErlNifCond *notEmpty;
     ErlNifMutex *mutex;
-    std::queue<task *> q;
+    std::queue<task_t*> q;
     const unsigned int size;
 };
 
@@ -115,7 +115,7 @@ TaskQueue::~TaskQueue()
 }
 
 void
-TaskQueue::queue(task *t)
+TaskQueue::queue(task_t *t)
 {
     enif_mutex_lock(mutex);
 
@@ -128,10 +128,10 @@ TaskQueue::queue(task *t)
     enif_mutex_unlock(mutex);
 }
 
-task*
+task_t*
 TaskQueue::dequeue()
 {
-    task *t;
+    task_t *t;
 
     enif_mutex_lock(mutex);
 
@@ -246,7 +246,7 @@ make_error(ErlNifEnv* env, ERL_NIF_TERM ref, const char* mesg)
 ERL_NIF_TERM
 snappy_compress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-    task *t = NULL;
+    task_t *t = NULL;
 
     try {
         t = allocTask(env, argv[0], argv[1], argv[2]);
@@ -263,7 +263,7 @@ snappy_compress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
 
 ERL_NIF_TERM
-compress(task *t)
+compress(task_t *t)
 {
     try {
         snappy::ByteArraySource source(SC_PTR(t->data.data), t->data.size);
@@ -281,7 +281,7 @@ compress(task *t)
 ERL_NIF_TERM
 snappy_decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
-    task *t = NULL;
+    task_t *t = NULL;
 
     try {
         t = allocTask(env, argv[0], argv[1], argv[2]);
@@ -298,7 +298,7 @@ snappy_decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
 
 ERL_NIF_TERM
-decompress(task *t)
+decompress(task_t *t)
 {
     ErlNifBinary ret;
     size_t len;
@@ -417,10 +417,10 @@ on_unload(ErlNifEnv* env, void* priv_data)
 }
 
 
-task*
+task_t*
 allocTask(ErlNifEnv* env, ERL_NIF_TERM term, ERL_NIF_TERM pid, ERL_NIF_TERM ref)
 {
-    task *t = static_cast<task *>(enif_alloc(sizeof(task)));
+    task_t *t = static_cast<task_t*>(enif_alloc(sizeof(task_t)));
     ERL_NIF_TERM copy;
 
     if (t == NULL) {
@@ -452,7 +452,7 @@ allocTask(ErlNifEnv* env, ERL_NIF_TERM term, ERL_NIF_TERM pid, ERL_NIF_TERM ref)
 
 
 void
-freeTask(task **t)
+freeTask(task_t **t)
 {
     enif_free_env((*t)->env);
     enif_free(*t);
@@ -464,7 +464,7 @@ void*
 compressor(void *arg)
 {
     while (true) {
-        task *t = compQueue->dequeue();
+        task_t *t = compQueue->dequeue();
 
         if (t == NULL) {
             break;
@@ -483,7 +483,7 @@ void*
 decompressor(void *arg)
 {
     while (true) {
-        task *t = decompQueue->dequeue();
+        task_t *t = decompQueue->dequeue();
 
         if (t == NULL) {
             break;
