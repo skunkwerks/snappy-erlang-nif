@@ -132,7 +132,9 @@ TaskQueue::queue(task_t *t)
         enif_cond_wait(notFull, mutex);
     }
     q.push(t);
-    enif_cond_signal(notEmpty);
+    if (q.size() == 1) {
+        enif_cond_signal(notEmpty);
+    }
 
     enif_mutex_unlock(mutex);
 }
@@ -149,7 +151,9 @@ TaskQueue::dequeue()
     }
     t = q.front();
     q.pop();
-    enif_cond_signal(notFull);
+    if (q.size() == (size - 1)) {
+        enif_cond_signal(notFull);
+    }
 
     enif_mutex_unlock(mutex);
 
