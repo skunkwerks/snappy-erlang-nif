@@ -17,15 +17,19 @@
 
 #include <iostream>
 #include <cstring>
+#include <cstdlib>
 #include <queue>
 
 #include "erl_nif_compat.h"
 #include "snappy/snappy.h"
 #include "snappy/snappy-sinksource.h"
 
-#ifdef OTP_R13B03
-#error OTP R13B03 not supported. Upgrade to R13B04 or later.
+#if defined(OTP_R13B03) || defined(OTP_R13B04)
+#error OTP R13B03/R13B04 not supported. Upgrade to R14B or later.
 #endif
+
+#define DEFAULT_NUM_COMPRESSORS 1
+#define DEFAULT_NUM_DECOMPRESSORS 1
 
 #define SC_PTR(c) reinterpret_cast<char *>(c)
 
@@ -41,13 +45,16 @@ static ERL_NIF_TERM ATOM_ERROR;
 
 const int QUEUE_SIZE = 100; // # of elements
 
-static ErlNifTid compThreadId;
-static ErlNifTid decompThreadId;
+static unsigned int numCompressors = DEFAULT_NUM_COMPRESSORS;
+static unsigned int numDecompressors = DEFAULT_NUM_DECOMPRESSORS;
+
+static ErlNifTid *compThreadIds = NULL;
+static ErlNifTid *decompThreadIds = NULL;
 
 class TaskQueue;
 
-static TaskQueue *compQueue = NULL;
-static TaskQueue *decompQueue = NULL;
+static TaskQueue **compQueues = NULL;
+static TaskQueue **decompQueues = NULL;
 
 
 static void* compressor(void*);
@@ -66,6 +73,8 @@ static int on_load(ErlNifEnv*, void**, ERL_NIF_TERM);
 static void on_unload(ErlNifEnv*, void*);
 static inline task_t* allocTask(ErlNifEnv*, ERL_NIF_TERM, ERL_NIF_TERM, ERL_NIF_TERM);
 static inline void freeTask(task_t**);
+static void destroyQueues();
+static void finishThreads();
 
 
 class bad_arg { };
@@ -256,7 +265,7 @@ snappy_compress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    compQueue->queue(t);
+    compQueues[rand() % numCompressors]->queue(t);
 
     return ATOM_OK;
 }
@@ -291,7 +300,7 @@ snappy_decompress(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
-    decompQueue->queue(t);
+    decompQueues[rand() % numDecompressors]->queue(t);
 
     return ATOM_OK;
 }
@@ -366,62 +375,10 @@ snappy_is_valid(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 }
 
 
-int
-on_load(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
-{
-    try {
-        compQueue = new TaskQueue(QUEUE_SIZE);
-        decompQueue = new TaskQueue(QUEUE_SIZE);
-    } catch (std::bad_alloc e) {
-        return 1;
-    }
-
-
-    if (0 != enif_thread_create(const_cast<char*>("compressor"),
-                                &compThreadId, compressor, NULL, NULL)) {
-        delete compQueue;
-        delete decompQueue;
-        compQueue = decompQueue = NULL;
-        return 2;
-    }
-
-    if (0 != enif_thread_create(const_cast<char*>("decompressor"),
-                                &decompThreadId, decompressor, NULL, NULL)) {
-        delete decompQueue;
-        delete decompQueue;
-        compQueue = decompQueue = NULL;
-        return 3;
-    }
-
-    ATOM_OK = enif_make_atom(env, "ok");
-    ATOM_ERROR = enif_make_atom(env, "error");
-
-    return 0;
-}
-
-
-void
-on_unload(ErlNifEnv* env, void* priv_data)
-{
-    void *result = NULL;
-
-    compQueue->queue(NULL);
-    decompQueue->queue(NULL);
-
-    enif_thread_join(compThreadId, &result);
-    enif_thread_join(decompThreadId, &result);
-
-    delete compQueue;
-    delete decompQueue;
-    compQueue = decompQueue = NULL;
-}
-
-
 task_t*
 allocTask(ErlNifEnv* env, ERL_NIF_TERM term, ERL_NIF_TERM pid, ERL_NIF_TERM ref)
 {
     task_t *t = static_cast<task_t*>(enif_alloc(sizeof(task_t)));
-    ERL_NIF_TERM copy;
 
     if (t == NULL) {
         throw std::bad_alloc();
@@ -438,7 +395,7 @@ allocTask(ErlNifEnv* env, ERL_NIF_TERM term, ERL_NIF_TERM pid, ERL_NIF_TERM ref)
         throw std::bad_alloc();
     }
 
-    copy = enif_make_copy(t->env, term);
+    ERL_NIF_TERM copy = enif_make_copy(t->env, term);
     if (!enif_inspect_iolist_as_binary(t->env, copy, &t->data)) {
         enif_free_env(t->env);
         enif_free(t);
@@ -463,8 +420,10 @@ freeTask(task_t **t)
 void*
 compressor(void *arg)
 {
+    TaskQueue *q = static_cast<TaskQueue *>(arg);
+
     while (true) {
-        task_t *t = compQueue->dequeue();
+        task_t *t = q->dequeue();
 
         if (t == NULL) {
             break;
@@ -482,8 +441,10 @@ compressor(void *arg)
 void*
 decompressor(void *arg)
 {
+    TaskQueue *q = static_cast<TaskQueue *>(arg);
+
     while (true) {
-        task_t *t = decompQueue->dequeue();
+        task_t *t = q->dequeue();
 
         if (t == NULL) {
             break;
@@ -495,6 +456,172 @@ decompressor(void *arg)
     }
 
     return NULL;
+}
+
+
+int
+on_load(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
+{
+    ERL_NIF_TERM head, tail = info;
+    ERL_NIF_TERM numCompressorsOpt, numDecompressorsOpt;
+
+    numCompressorsOpt = enif_make_atom(env, "compressors");
+    numDecompressorsOpt = enif_make_atom(env, "decompressors");
+
+    while (enif_get_list_cell(env, tail, &head, &tail)) {
+        const ERL_NIF_TERM *props;
+        int arity;
+
+        if (!enif_get_tuple(env, head, &arity, &props)) {
+            return 1;
+        }
+        if (arity != 2 || !enif_is_atom(env, props[0])) {
+            return 1;
+        }
+
+        if (enif_compare(props[0], numCompressorsOpt)) {
+            if (!enif_get_uint(env, props[1], &numCompressors)) {
+                return 1;
+            }
+        } else if (enif_compare(props[0], numDecompressorsOpt)) {
+            if (!enif_get_uint(env, props[1], &numDecompressors)) {
+                return 1;
+            }
+        }
+    }
+
+    try {
+        compQueues = new TaskQueue*[numCompressors];
+        for (unsigned int i = 0; i < numCompressors; i++) {
+            compQueues[i] = NULL;
+        }
+        compThreadIds = new ErlNifTid[numCompressors];
+        decompQueues = new TaskQueue*[numDecompressors];
+        for (unsigned int i = 0; i < numDecompressors; i++) {
+            decompQueues[i] = NULL;
+        }
+        decompThreadIds = new ErlNifTid[numDecompressors];
+    } catch (std::bad_alloc e) {
+        destroyQueues();
+        return 2;
+    }
+
+    for (unsigned int i = 0; i < numCompressors; i++) {
+
+        try {
+            compQueues[i] = new TaskQueue(QUEUE_SIZE);
+        } catch(std::bad_alloc e) {
+            for (unsigned int j = 0; j < i; j++) {
+                void *result = NULL;
+                compQueues[j]->queue(NULL);
+                enif_thread_join(compThreadIds[j], &result);
+            }
+            destroyQueues();
+
+            return 2;
+        }
+
+        if (0 != enif_thread_create(const_cast<char*>("compressor"),
+                                    &compThreadIds[i], compressor,
+                                    static_cast<void *>(compQueues[i]),
+                                    NULL)) {
+            for (unsigned int j = 0; j < i; j++) {
+                void *result = NULL;
+                compQueues[j]->queue(NULL);
+                enif_thread_join(compThreadIds[j], &result);
+            }
+            destroyQueues();
+
+            return 3;
+        }
+    }
+
+    for (unsigned int i = 0; i < numDecompressors; i++) {
+
+        try {
+            decompQueues[i] = new TaskQueue(QUEUE_SIZE);
+        } catch(std::bad_alloc e) {
+            for (unsigned int j = 0; j < i; j++) {
+                void *result = NULL;
+                decompQueues[j]->queue(NULL);
+                enif_thread_join(decompThreadIds[j], &result);
+            }
+            destroyQueues();
+
+            return 2;
+        }
+
+        if (0 != enif_thread_create(const_cast<char*>("decompressor"),
+                                    &decompThreadIds[i], decompressor,
+                                    static_cast<void *>(decompQueues[i]),
+                                    NULL)) {
+            for (unsigned int j = 0; j < i; j++) {
+                void *result = NULL;
+                decompQueues[j]->queue(NULL);
+                enif_thread_join(decompThreadIds[j], &result);
+            }
+            destroyQueues();
+
+            return 4;
+        }
+    }
+
+    ATOM_OK = enif_make_atom(env, "ok");
+    ATOM_ERROR = enif_make_atom(env, "error");
+
+    return 0;
+}
+
+
+void
+on_unload(ErlNifEnv* env, void* priv_data)
+{
+    finishThreads();
+    destroyQueues();
+}
+
+
+void
+destroyQueues()
+{
+    if (compQueues != NULL) {
+        for (unsigned int i = 0; i < numCompressors; i++) {
+            if (compQueues[i] != NULL) {
+                delete compQueues[i];
+            }
+        }
+        delete [] compQueues;
+    }
+    if (compThreadIds != NULL) {
+        delete [] compThreadIds;
+    }
+    if (decompQueues != NULL) {
+        for (unsigned int i = 0; i < numDecompressors; i++) {
+            if (decompQueues[i] != NULL) {
+                delete decompQueues[i];
+            }
+        }
+        delete [] decompQueues;
+    }
+    if (decompThreadIds != NULL) {
+        delete [] decompThreadIds;
+    }
+}
+
+
+void
+finishThreads()
+{
+    void *result = NULL;
+
+    for (unsigned int i = 0; i < numCompressors; i++) {
+        compQueues[i]->queue(NULL);
+        enif_thread_join(compThreadIds[i], &result);
+    }
+    for (unsigned int i = 0; i < numDecompressors; i++) {
+        decompQueues[i]->queue(NULL);
+        enif_thread_join(decompThreadIds[i], &result);
+    }
 }
 
 

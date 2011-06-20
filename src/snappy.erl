@@ -33,7 +33,7 @@ init() ->
     Dir ->
         filename:join(Dir, "snappy_nif")
     end,
-    (catch erlang:load_nif(SoName, 0)),
+    (catch erlang:load_nif(SoName, [{compressors, 2}, {decompressors, 1}])),
     case erlang:system_info(otp_release) of
     "R13B03" -> true;
     _ -> ok
