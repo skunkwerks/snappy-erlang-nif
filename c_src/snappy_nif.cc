@@ -167,6 +167,14 @@ snappy_decompress_erl(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
+    // Check that the binary is not empty
+    if(bin.size == 0) {
+        // Snappy library cannot decompress an empty binary - although
+        // it will unfortunately let you compress one. If an empty binary
+        // has been passed - send an empty binary back.
+        return make_ok(env, enif_make_binary(env,&ret));
+    }
+
     try {
         if(!snappy::GetUncompressedLength(SC_PTR(bin.data), bin.size, &len)) {
             return make_error(env, "data_not_compressed");
