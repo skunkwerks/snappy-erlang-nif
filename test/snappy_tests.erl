@@ -72,9 +72,9 @@ decompression() ->
     ?assertEqual({ok, BigData}, snappy:decompress(Compressed3)),
     ok.
 
-can_compress_and_decompress_empty_lists_test() ->
+can_compress_and_decompress_empty_binary_test() ->
     % Try to compress an empty list...
-    {ok, Compressed} = snappy:compress([]),
+    {ok, Compressed} = snappy:compress(<<>>),
     % Try to decompress the result of the compression...
     {ok, Decompressed} = snappy:decompress(Compressed),
     ok.
