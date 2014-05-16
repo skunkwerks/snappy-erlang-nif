@@ -138,10 +138,21 @@ ERL_NIF_TERM
 snappy_compress_erl(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 {
     ErlNifBinary input;
+    ErlNifBinary empty;
+
+    // init empty;
+    memset(&empty,0,sizeof(ErlNifBinary));
 
     if(!enif_inspect_iolist_as_binary(env, argv[0], &input)) {
         return enif_make_badarg(env);
     }
+
+    // If empty binary has been provided, return an empty binary.
+    // Snappy will do this in any case, so might as well skip the
+    // overhead...
+    if(input.size == 0) {
+        return make_ok(env, enif_make_binary(env,&empty));
+     }
 
     try {
         snappy::ByteArraySource source(SC_PTR(input.data), input.size);
@@ -162,6 +173,9 @@ snappy_decompress_erl(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
     ErlNifBinary bin;
     ErlNifBinary ret;
     size_t len;
+
+    // init ret;
+    memset(&ret,0,sizeof(ErlNifBinary));
 
     if(!enif_inspect_iolist_as_binary(env, argv[0], &bin)) {
         return enif_make_badarg(env);
