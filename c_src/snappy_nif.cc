@@ -143,6 +143,16 @@ snappy_compress_erl(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         return enif_make_badarg(env);
     }
 
+    // If empty binary has been provided, return an empty binary.
+    // Snappy will do this in any case, so might as well skip the
+    // overhead...
+    if(input.size == 0) {
+        ErlNifBinary empty;
+        // init empty;
+        memset(&empty,0,sizeof(ErlNifBinary));
+        return make_ok(env, enif_make_binary(env,&empty));
+     }
+
     try {
         snappy::ByteArraySource source(SC_PTR(input.data), input.size);
         SnappyNifSink sink(env);
@@ -165,6 +175,15 @@ snappy_decompress_erl(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 
     if(!enif_inspect_iolist_as_binary(env, argv[0], &bin)) {
         return enif_make_badarg(env);
+    }
+
+    // Check that the binary is not empty
+    if(bin.size == 0) {
+        // Snappy library cannot decompress an empty binary - although
+        // it will unfortunately let you compress one. If an empty binary
+        // has been passed - send an empty binary back.
+        memset(&ret,0,sizeof(ErlNifBinary));
+        return make_ok(env, enif_make_binary(env,&ret));
     }
 
     try {
