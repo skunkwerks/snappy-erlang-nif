@@ -1,0 +1,12 @@
+case <<1:16/native>> of
+    <<1,0>> ->
+        CONFIG;
+    <<0,1>> ->
+        CXXFLAGS = [{"CXXFLAGS", "$CXXFLAGS -DWORDS_BIGENDIAN"}],
+        case lists:keyfind(port_env, 1, CONFIG) of
+            false ->
+                CONFIG ++ [{port_env, CXXFLAGS}];
+            {K, V} ->
+                lists:keyreplace(K, 1, CONFIG, {K, V ++ CXXFLAGS})
+        end
+end.
