@@ -41,16 +41,16 @@ init() ->
 
 
 compress(_IoList) ->
-    erlang:nif_error(snappy_nif_not_loaded).
+    erlang:nif_error({nif_not_loaded,module,?MODULE,line,?LINE}).
 
 
 decompress(_IoList) ->
-    erlang:nif_error(snappy_nif_not_loaded).
+    erlang:nif_error({nif_not_loaded,module,?MODULE,line,?LINE}).
 
 
 uncompressed_length(_IoList) ->
-    erlang:nif_error(snappy_nif_not_loaded).
+    erlang:nif_error({nif_not_loaded,module,?MODULE,line,?LINE}).
 
 
 is_valid(_IoList) ->
-    erlang:nif_error(snappy_nif_not_loaded).
+    erlang:nif_error({nif_not_loaded,module,?MODULE,line,?LINE}).
