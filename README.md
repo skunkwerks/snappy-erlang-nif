@@ -4,14 +4,27 @@ This is an Erlang NIF for Google's snappy fast compressor and decompressor.
 
 Google snappy's official repository and bug tracking system is at:
 
-* http://code.google.com/p/snappy/
+- http://code.google.com/p/snappy/
 
 Its source is included in this project.
 
+# versioning
 
-# site
+As the underlying BEAM and NIF wrapper code changes rarely, versions are
+kept in lockstep with Google's releases. PRs to update these are
+welcomed!
 
-https://github.com/skunkwerks/snappy-erlang-nif
+# usage
+
+- this package is called `snapperl` on hex due to many conflicts
+- https://hex.pm/packages/snapperl
+- https://github.com/skunkwerks/snappy-erlang-nif
+
+- mix: `{:snappy, "~> 0.0.0", hex: :snapperl}`
+- rebar3: `{snappy, "0.0.0", {pkg, snapperl}}`
+- erlang.mk: `dep_snapperl = hex 0.0.0`
+
+update your versions accordingly.
 
 # credits
 
@@ -19,6 +32,7 @@ Software is built by a few people and maintained by many. Thank-you for
 all your patches!
 
 
+- @dch314
 - Arne Ehrlich <Arne.Ehrlich@groknet.de>
 - Bryan Chan <bryanpkc@gmail.com>
 - Dave Cottlehuber <dch@skunkwerks.at>
@@ -30,7 +44,6 @@ all your patches!
 - Peter Membrey <peter@membrey.hk>
 - Piotr Nosek <piotr.nosek@erlang-solutions.com>
 - benoitc <bchesneau@gmail.com>
-- @dch314
 - glejeune <gregoire.lejeune@free.fr>
 
 # performance tests

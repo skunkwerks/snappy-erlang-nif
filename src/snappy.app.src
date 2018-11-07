@@ -1,12 +1,14 @@
-{application, snappy,
+{application,
+ snappy,
  [
-  {description, "snappy compressor/decompressor Erlang NIF wrapper"},
-  {vsn, "1.1.1"},
+  {description, "google snappy compressor/decompressor Erlang NIF wrapper"},
+  {vsn, "1.1.3"},
+  {licenses,["Apache-2.0"]},
+  {links,[{"github","https://github.com/skunkwerks/snappy-erlang-nif"}]},
+  {maintainers, ["Dave Cottlehuber"]},
+  {pkg_name, "snapperl"},
   {registered, []},
-  {applications, [
-                  kernel,
-                  stdlib
-                 ]},
+  {applications, [ kernel, stdlib ]},
   {env, []},
   {modules, [snappy]}
  ]}.
