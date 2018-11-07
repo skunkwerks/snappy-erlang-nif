@@ -11,8 +11,27 @@ Its source is included in this project.
 
 # site
 
-https://github.com/fdmanana/snappy-erlang-nif
+https://github.com/skunkwerks/snappy-erlang-nif
 
+# credits
+
+Software is built by a few people and maintained by many. Thank-you for
+all your patches!
+
+
+- Arne Ehrlich <Arne.Ehrlich@groknet.de>
+- Bryan Chan <bryanpkc@gmail.com>
+- Dave Cottlehuber <dch@skunkwerks.at>
+- Filipe David Manana <fdmanana@apache.org>
+- Joshua Scott <joshua.scott@gmail.com>
+- Kelly McLaughlin <kelly@basho.com>
+- Louis-Philippe Gauthier <lpgauth@gmail.com>
+- Mikhail Uvarov <arcusfelis@gmail.com>
+- Peter Membrey <peter@membrey.hk>
+- Piotr Nosek <piotr.nosek@erlang-solutions.com>
+- benoitc <bchesneau@gmail.com>
+- @dch314
+- glejeune <gregoire.lejeune@free.fr>
 
 # performance tests
 
