@@ -72,14 +72,14 @@ decompression() ->
     ?assertEqual({ok, BigData}, snappy:decompress(Compressed3)),
     ok.
 
-check_double_decompress_doesnt_cause_segault_test() ->
+check_double_decompress_doesnt_cause_segfault_test() ->
     % Try to decompress an empty binary
     ?assertMatch({ok,<<>>}, snappy:decompress(<<>>)),
     % And once more...
     ?assertMatch({ok,<<>>}, snappy:decompress(<<>>)),
     ok.
 
-check_double_compress_doesnt_cause_segault_test() ->
+check_double_compress_doesnt_cause_segfault_test() ->
     % Try to compress an empty binary
     ?assertMatch({ok,<<>>},snappy:compress(<<>>)),
     % And once more...
