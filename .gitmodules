@@ -1,4 +1,0 @@
-[submodule "snappy"]
-	path = c_src/snappy
-	url = https://github.com/google/snappy.git
-	branch = 1.1.3
