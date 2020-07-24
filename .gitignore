@@ -7,3 +7,4 @@ priv
 *.la
 *~
 *.swp
+_build
