@@ -8,3 +8,6 @@ priv
 *~
 *.swp
 _build
+c_src/snappy/*.d
+c_src/*.d
+compile_commands.json
