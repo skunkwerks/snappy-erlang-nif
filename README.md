@@ -10,6 +10,8 @@ Its source is included in this project.
 
 # changelog
 
+- tag `1.1.2` as tests pass against OTP-24
+- tag `otp-24` compatibility
 - switch build chain to [rebar3] and [enc] requiring OTP20 or newer
 - tag `snappy-1.1.8`, also first version compatible with OTP23 (thanks @skaes)
 - tag `snappy-1.1.3`
