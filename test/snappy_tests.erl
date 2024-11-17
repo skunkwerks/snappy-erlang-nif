@@ -105,3 +105,15 @@ can_decompress_an_empty_binary_test() ->
     {ok, Decompressed} = snappy:decompress(<<>>),
     ?assertMatch(Decompressed,<<>>),
     ok.
+
+can_compress_and_decompress_binary_that_triggers_corruption_with_o3_test() ->
+	% triggers a corruption when compiled with -O3, but not with -O0 on OTP25, 26, 27
+	% *and* clang18, but not clang16.
+	Doc =[<<"00000000-7fffffff">>],
+	{ok, C} = snappy:compress(erlang:term_to_binary(Doc)),
+ 	true = snappy:is_valid(C),
+	{ok, U} = snappy:decompress(C),
+	New = erlang:binary_to_term(U),
+	?assertEqual(Doc, New),
+	ok.
+
