@@ -22,10 +22,6 @@
 #include "snappy/snappy.h"
 #include "snappy/snappy-sinksource.h"
 
-#ifdef OTP_R13B03
-#error OTP R13B03 not supported. Upgrade to R13B04 or later.
-#endif
-
 #ifdef __cplusplus
 #define BEGIN_C extern "C" {
 #define END_C }
@@ -41,7 +37,7 @@ class SnappyNifSink : public snappy::Sink
     public:
         SnappyNifSink(ErlNifEnv* e);
         ~SnappyNifSink();
-        
+
         void Append(const char* data, size_t n);
         char* GetAppendBuffer(size_t len, char* scratch);
         ErlNifBinary& getBin();
@@ -80,7 +76,7 @@ char*
 SnappyNifSink::GetAppendBuffer(size_t len, char* scratch)
 {
     size_t sz;
-    
+
     if((length + len) > bin.size) {
         sz = (len * 4) < 8192 ? 8192 : (len * 4);
 
@@ -119,7 +115,7 @@ static inline ERL_NIF_TERM
 make_ok(ErlNifEnv* env, ERL_NIF_TERM mesg)
 {
     ERL_NIF_TERM ok = make_atom(env, "ok");
-    return enif_make_tuple2(env, ok, mesg);   
+    return enif_make_tuple2(env, ok, mesg);
 }
 
 
@@ -158,7 +154,7 @@ snappy_compress_erl(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
         SnappyNifSink sink(env);
         snappy::Compress(&source, &sink);
         return make_ok(env, enif_make_binary(env, &sink.getBin()));
-    } catch(const std::bad_alloc & e) {
+    } catch(std::bad_alloc e) {
         return make_error(env, "insufficient_memory");
     } catch(...) {
         return make_error(env, "unknown");
@@ -249,21 +245,21 @@ snappy_is_valid(ErlNifEnv* env, int argc, const ERL_NIF_TERM argv[])
 }
 
 
-int
+static int
 on_load(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
 {
     return 0;
 }
 
 
-int
+static int
 on_reload(ErlNifEnv* env, void** priv, ERL_NIF_TERM info)
 {
     return 0;
 }
 
 
-int
+static int
 on_upgrade(ErlNifEnv* env, void** priv, void** old_priv, ERL_NIF_TERM info)
 {
     return 0;
@@ -271,10 +267,10 @@ on_upgrade(ErlNifEnv* env, void** priv, void** old_priv, ERL_NIF_TERM info)
 
 
 static ErlNifFunc nif_functions[] = {
-    {"compress", 1, snappy_compress_erl},
-    {"decompress", 1, snappy_decompress_erl},
-    {"uncompressed_length", 1, snappy_uncompressed_length_erl},
-    {"is_valid", 1, snappy_is_valid}
+    {"compress", 1, snappy_compress_erl, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+    {"decompress", 1, snappy_decompress_erl, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+    {"uncompressed_length", 1, snappy_uncompressed_length_erl, ERL_NIF_DIRTY_JOB_CPU_BOUND},
+    {"is_valid", 1, snappy_is_valid, ERL_NIF_DIRTY_JOB_CPU_BOUND}
 };
 
 
